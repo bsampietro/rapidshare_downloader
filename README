@@ -1,0 +1,46 @@
+This is a very simple ruby program that i wrote to automate the process of downloading files from rapidshare, without having a premium account.
+The program file is available for download here, to use it you have to install ruby and rubygems (under Linux look them up in your distro package manager, under Windows go here to download ruby and here to download rubygems) if you don't have them installed yet, and once you have rubygems, install a couple of libraries the program needs this way:
+
+#>gem install mechanize --include-dependencies
+
+I didn't tried it under windows but it shouldn't have any problem, maybe you have to escape the directory path where you want to store the files, so 'c:\myfolder\somewhere' should be 'c:\\myfolder\\somewhere'.
+
+Execute the program without any arguments and the help is displayed.
+
+usage:
+$> rapidshare_downloader RAPIDSHARE_URLS...(separated by spaces) DOWNLOAD_DIRECTORY
+
+Example:
+$> rapidshare_downloader http://rapidshare.com/something1 http://rapidshare.com/something2 /home/myname/somedirectorypath
+
+Or you can also call it this way(which is more practical):
+
+$> rapidshare_downloader DOWNLOAD_FILE
+where DOWNLOADFILE is a text file containing on each line a rapidshare address, and in the last line an existing directory in the filesystem
+
+Example of a DOWNLOADFILE:
+http://rapidshare.com/something1
+http://rapidshare.com/something2
+...
+/home/myname/somedirectorypath
+
+Empty lines and lines starting with '#' are not read.
+
+
+Some comments if you are interested in how it works.
+
+I used a very good http client library called Mechanize, because the one that comes with ruby (Net::HTTP) is a little bit hard to manage, for example cookies are not handled automatically, and to submit a form you need to pass in the parameters one by one, you cannot post the html.
+The use of Mechanize is really simple and intuitive, it handles cookies and redirection alone, it's possible to simulate button clicks, submit forms, etc.
+The only drawback is that the documentation is not complete, so sometimes you have to guess.
+It is available as a gem, so installing it is as simple as doing:
+
+$>sudo gem install mechanize --include-dependencies
+
+it will also download hpricot'which is a library that mechanize uses. Hpricot is used to parse html and sometimes you have to create some hpricot objects to interact with mechanize.
+
+The code is easy to understand, what I do was a little hack to the html. First I make a get request with the url address that rapidshare gives, then I submit the first form in the page which is the one that submits if you click on the "Free user" button, in the response there is a form in a javascript string which will be place into the DOM once a "setTimeout" javascript function executes (this time is also validated in the server, so it's impossible to submit the form before time), so I extract this form and submit it after the time passes. I do this for each file.
+
+Another important thing to notice, is that the file is saved in memory first and after all the file is downloaded, then it get saved in the hard disk.
+That is why I release the reference to the file and call the garbage collector after the file is saved, I take a look and it seems to not be working, but I still had plenty of memory when i tried it, maybe thats why the garbage collector didn't collect it, or the top command was not showing the right things...
+So to run the program you will need memory depending on the size of the files, or at least each file (if the gc works).
+
